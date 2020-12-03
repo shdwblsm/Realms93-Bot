@@ -1,0 +1,18 @@
+# Credentials File
+
+bots = {
+	"Zugzwang": [
+		{"username": "Zugwang"},
+		{"password": "Samoas5"}
+		]
+
+	"Zwischenzug": [
+		{"username": "Zwischenzug"},
+		{"password": "Samoas7"}
+		]
+	
+	"Trebuchet": [
+		{"username": "Trebuchet"},
+		{"password": "Samoas3"}
+		]
+}
