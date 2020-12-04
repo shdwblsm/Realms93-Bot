@@ -1,5 +1,11 @@
 def assess(Output,botState,botName):    
-    import re   
+    import re 
+    from datetime import datetime
+    import telnetlib
+    from telnetlib import Telnet
+    import sys
+    
+    tn = telnetlib.Telnet("www.windows93.net", 8082)  
 
         # line = Output
         
@@ -10,6 +16,11 @@ def assess(Output,botState,botName):
     Output = re.sub(colorcodes, '', Output)
     
     print("After Regex: " + Output)
+   
+
+    file = open("realms93-regexstrip", "a")
+    file.write(Output)
+    file.close()
     
     # If multiple lines in buffer, split them
     Output = Output.split('\n')
@@ -20,16 +31,21 @@ def assess(Output,botState,botName):
             
             print("You have entered the line foreach: " + line)
 
-            if ('*Zugzwang whispers to you*' in line):
-            # Accept commands only from whispers from Zugzwang or Bishop -- checks to see it's the start of string and not a double up whisper
+            if ('Zugzwang whispers to you' in line or 'Bishop whispers to you' in line or 'Argus whispers to you' in line):
+            # Accept commands only from whispers from Zugzwang or Bishop/Argus
 
-                print("Boss Whisper Detected")
+                print("=========== BOSS WHISPER DETECTED ===========")
+                
 
                 # saves line to cmd
-                if 'cmd@' in line:
+                if ('cmd@' in line):
+                    
+                    
                     cmd = line.split('@')[1]
                     who = line.split(' ')[0]
-
+                    
+                    print('WHO: ' + who + ' CMD: ' + cmd)
+                          
                     # Save a log
                     now = datetime.now()
                     tstamp = now.strftime("[%m/%d/%Y %H:%M] ")
@@ -38,7 +54,7 @@ def assess(Output,botState,botName):
                     file.write(tstamp + who + ': ' + cmd)
                     file.close()
 
-                    if cmd == "Halt":
+                    if (cmd == "Halt"):
                         # Stop doing anything until "resume" is issued
                         botState = Halt
 
@@ -46,7 +62,7 @@ def assess(Output,botState,botName):
 
                         return botState
 
-                    elif cmd == "Resume":
+                    elif (cmd == "Resume"):
                         # Reset botState to "active"
                         botState = "active"
 
@@ -54,13 +70,17 @@ def assess(Output,botState,botName):
 
                         return botState
 
-                else:
+                    else:
+                        print('Made it to the else statement')
+                        # do command
+                        
+                                               
+                        return(cmd)
+                        
+                        
+                        
 
-                    # do command
-                    tn.write(cmd.encode('ascii') + b"\n")
-
-
-            elif '*swings at*' or '*hits*' and botName in line:
+            elif ('*swings at*' or '*hits*' in line and botName in line):
                 # Examples: 
                 # Rat swings at Zugzwang but misses!
                 # Rat hits Zwischenzug for 1 damage!
@@ -70,22 +90,21 @@ def assess(Output,botState,botName):
                 # roomState = tn.write(b"api").encode(ascii)
 
                 # Check botState and, if not halt, set botState and pull attacker and target from line and save to atk, target variable depending on if it hits or misses
-                if botState == "Halt":
+                if (botState == "Halt"):
                     return
 
                 else:
-                    # botState = "Defending"
-                    break
-
-
-                if 'swings at' in line:
+                    botState = "Defending"
+                    
+                    
+                if ('swings at' in line):
 
                     atk = (line.split(' '))[0]
                     target = (line.split(' '))[3]
+                    
+                    return(atk, target)
 
-                    return atk, target
-
-                elif 'hits' in line:
+                elif ('hits' in line):
 
                     atk = (line.split(' '))[0]
                     target = (line.split(' '))[2]                
@@ -93,14 +112,16 @@ def assess(Output,botState,botName):
                     print(atk)
                     print(target)
 
-                    return atk, target
+                    cmd = "a " + atk
+                    
+                    return(atk, target)
 
                 else:
 
                     atk = ""
                     target = ""
 
-                    return atk, target
+                    return
 
 
                     # Respond to attack -- Use api command for awareness?
@@ -142,7 +163,7 @@ def assess(Output,botState,botName):
 
             # cmd Say             
         def say(words):
-
+            (tn.write(words.encode('ascii') + b"\n"))
             result = (tn.write(words.encode('ascii') + b"\n"))
 
             return result
